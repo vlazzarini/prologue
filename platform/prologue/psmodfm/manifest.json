@@ -1,0 +1,21 @@
+{
+    "header" : 
+    {
+        "platform" : "prologue",
+        "module" : "osc",
+        "api" : "1.0-0",
+        "dev_id" : 0,
+        "prg_id" : 0,
+        "version" : "0.1-0",
+        "name" : "psmfm",
+        "num_param" : 6,
+        "params" : [
+            ["max fshft", 0, 9, ""],
+            ["fshft", 0, 100, "%"],
+            ["trk mode", 0, 9, ""],
+            ["attack", 0, 100, "%"],
+            ["release", 0, 100, "%"],
+            ["env amnt", 0, 100, "%"]
+          ]
+    }
+}
