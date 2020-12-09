@@ -76,8 +76,8 @@ struct PSModFM {
     float kbw, k2, kg2;
     kbw = ff / (.5f + 3.5f * z); // Q: 0.5 to 4
     k2 = EXP(-fo / (.29f * kbw));
-    kg2 = 2 * sqrt(k2) / (1. - k2);
-    return kg2 * kg2 / 2.f;
+    kg2 = 2 * sqrt(k2) / (1.f - k2);
+    return kg2 * kg2 * .5f;
   }
 };
 
@@ -94,16 +94,18 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
   const float fmax = 12000.f; // max formant freq
   const float w0 = osc_w0f_for_note((params->pitch) >> 8, params->pitch & 0xFF);
   const float fo = w0 * k_samplerate;
+  const float fo_recip = w0 * k_samplerate_recipf;
   const float ws = w0 * obj.shft * (1 + obj.smax);
   const float ff =
-    obj.fmode ? fmax*POW2((obj.ff - 1.)*(obj.fmode+1)) : fo * POW(fmax / fo, obj.ff);
+    obj.fmode ? fmax*POW2((obj.ff - 1.)*(obj.fmode+1)) : fo * POW(fmax * fo_recip, obj.ff);
   const float ffmx = ff*(1.f + amnt * env.val());
   const float ndx = obj.mod_ndx(fo, ffmx < fmax ? ffmx : fmax);
   const float lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : obj.lfo;
   float ffz = (flags & k_flag_reset) ? ff : obj.ffz;
-  const float lfo_inc = (lfo - lfoz) / frames;
-  const float ff_inc = (ff - ffz) / frames;
+  const float frames_recip = 1.f / frames;
+  const float lfo_inc = (lfo - lfoz) * frames_recip;
+  const float ff_inc = (ff - ffz) * frames_recip;
   float phase = (flags & k_flag_reset) ? 0.f : obj.phase;
   float sphase = (flags & k_flag_reset) ? 0.f : obj.sphase;
   
@@ -114,7 +116,7 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
     int m, k = 0;
     e = 1.f + amnt * env.proc();
     ff_mod = (ffz + lfoz * ff)*e;
-    ff_mod = (ff_mod < fmax ? (ff_mod > fo ? ff_mod : fo) : fmax) / fo;
+    ff_mod = (ff_mod < fmax ? (ff_mod > fo ? ff_mod : fo) : fmax) * fo_recip;
     m =  (uint32_t) ff_mod;
     a = ff_mod - m;
     pc1 = phase * m + sphase;
