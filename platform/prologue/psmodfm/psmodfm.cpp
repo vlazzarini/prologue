@@ -87,10 +87,10 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
   const float fmax = 12000.f; // max formant freq
   const float w0 = osc_w0f_for_note((params->pitch) >> 8, params->pitch & 0xFF);
   const float fo = w0 * k_samplerate;
-  const float fo_recip = w0 * k_samplerate_recipf;
+  const float fo1 = w0 * k_samplerate_recipf;
   const float ws = w0 * obj.shft * (1 + obj.smax);
   const float ff =
-    obj.fmode ? fmax*POW2((obj.ff - 1.)*(obj.fmode+1)) : fo * POW(fmax * fo_recip, obj.ff);
+    obj.fmode ? fmax*POW2((obj.ff - 1.)*(obj.fmode+1)) : fo * POW(fmax * fo1, obj.ff);
   const float ffmx = ff*(1.f + amnt * env.val());
   const float ndx = obj.mod_ndx(fo, ffmx < fmax ? ffmx : fmax);
   const float lfo = q31_to_f32(params->shape_lfo);
@@ -110,7 +110,7 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
     int m, k = 0;
     e = 1.f + amnt * env.proc();
     ff_mod = (ffz + lfoz * ff)*e;
-    ff_mod = (ff_mod < fmax ? (ff_mod > fo ? ff_mod : fo) : fmax) * fo_recip;
+    ff_mod = (ff_mod < fmax ? (ff_mod > fo ? ff_mod : fo) : fmax) * fo1;
     m =  (uint32_t) ff_mod;
     a = ff_mod - m;
     pc1 = phase * m + sphase;
