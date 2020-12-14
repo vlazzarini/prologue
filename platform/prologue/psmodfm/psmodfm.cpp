@@ -20,11 +20,6 @@
 #define POW(x, y) fasterpowf(x, y)
 #define POW2(x) fasterpow2f(x)
 
-enum {
-  k_flags_none = 0,
-  k_flag_reset = 1 << 0,
-};
-
 // Simple linear AR envelope
 struct Env {
   float atti, deci, e;
@@ -54,7 +49,6 @@ struct PSModFM {
   float z;
   float ff, ffz;
   float lfo;
-  uint8_t flags;
   float shft;
   int16_t smax;
   int16_t fmode;
@@ -62,7 +56,7 @@ struct PSModFM {
   Env env;
 
   PSModFM() :  phase(0.f), sphase(0.f), z(0.f),
-               ff(0.f), ffz(0.f), lfo(0.f), flags(k_flags_none),
+               ff(0.f), ffz(0.f), lfo(0.f), 
                shft(0.f), smax(0), fmode(0), att(0.f), dec(0.f),
                amnt(0.f), env() { };
     
@@ -73,11 +67,11 @@ struct PSModFM {
   }
 
   float mod_ndx(float fo, float ff) {
-    float kbw, k2, kg2;
+    float kbw, g,gm;
     kbw = ff / (.5f + 3.5f * z); // Q: 0.5 to 4
-    k2 = EXP(-fo / (.29f * kbw));
-    kg2 = 2 * sqrt(k2) / (1. - k2);
-    return kg2 * kg2 / 2.f;
+    g = POW2(-fo / (.29f * kbw));
+    gm = 1. - g;
+    return 2*g/(gm*gm);
   }
 };
 
@@ -90,7 +84,6 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
                const uint32_t frames) {
   Env &env = obj.env;
   const float amnt = obj.amnt*32.f;
-  const uint8_t flags = obj.flags;
   const float fmax = 12000.f; // max formant freq
   const float w0 = osc_w0f_for_note((params->pitch) >> 8, params->pitch & 0xFF);
   const float fo = w0 * k_samplerate;
@@ -100,12 +93,12 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
   const float ffmx = ff*(1.f + amnt * env.val());
   const float ndx = obj.mod_ndx(fo, ffmx < fmax ? ffmx : fmax);
   const float lfo = q31_to_f32(params->shape_lfo);
-  float lfoz = (flags & k_flag_reset) ? lfo : obj.lfo;
-  float ffz = (flags & k_flag_reset) ? ff : obj.ffz;
+  float lfoz =  obj.lfo;
+  float ffz =   obj.ffz;
   const float lfo_inc = (lfo - lfoz) / frames;
   const float ff_inc = (ff - ffz) / frames;
-  float phase = (flags & k_flag_reset) ? 0.f : obj.phase;
-  float sphase = (flags & k_flag_reset) ? 0.f : obj.sphase;
+  float phase =  obj.phase;
+  float sphase = obj.sphase;
   
  
   for (int i = 0; i < frames; i++) {
@@ -133,14 +126,12 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
   obj.sphase = sphase;
   obj.lfo = lfoz;
   obj.ffz = ffz;
-  obj.flags = k_flags_none;
 }
 
 void OSC_NOTEON(const user_osc_param_t *const params) {
   const float att = POW(11.f, obj.att) - 1.f;
   const float dec = POW(11.f, obj.dec) - 1.f;
   obj.env.init(att, dec);
-  obj.flags |= k_flag_reset;
 }
 
 void OSC_NOTEOFF(const user_osc_param_t *const params) { obj.env.decay(); }
