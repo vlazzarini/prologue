@@ -1,0 +1,21 @@
+{
+    "header" : 
+    {
+        "platform" : "prologue",
+        "module" : "osc",
+        "api" : "1.0-0",
+        "dev_id" : 0,
+        "prg_id" : 0,
+        "version" : "0.1-0",
+        "name" : "exmfm1",
+        "num_param" : 6,
+        "params" : [
+            ["car ratio", 0, 9, ""],
+            ["mod ratio", 0, 9, ""],
+            ["mod fine", 0, 100, "%"],
+            ["attack", 0, 100, "%"],
+            ["release", 0, 100, "%"],
+            ["env amnt", 0, 100, "%"]
+          ]
+    }
+}

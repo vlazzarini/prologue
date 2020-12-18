@@ -125,11 +125,11 @@ struct PSModFM {
   int16_t fno;
   float att, dec, amnt;
   float form;
-  float scal;
+  float offset;
   Env env;
 
   PSModFM() :  phase(0.f), sphase(0.f),shft(0.f), smax(0), fno(0), att(0.f),
-               dec(0.f),amnt(0.f), form(0.f), scal(0.f), env() { };
+               dec(0.f),amnt(0.f), form(0.f), offset(0.f), env() { };
     
 
   float formant(float ndx, float ff, float phase, float sphase, float mod) {
@@ -158,7 +158,7 @@ void OSC_INIT(uint32_t platform, uint32_t api) {
 void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
                const uint32_t frames) {
   Env &env = obj.env;
-  const float scal = obj.scal*10.f;
+  const float offset = obj.offset*10.f;
   const float amnt = obj.amnt*2.f;
   const int16_t fno = obj.fno;
   const int note = (params->pitch) >> 8;
@@ -201,7 +201,7 @@ void OSC_CYCLE(const user_osc_param_t *const params, int32_t *yn,
             frac*(amplitudes[(k-1)*6+n+1] - amplitudes[(k-1)*6+n]);
     ff[k] = ff[k] < fo ? 1. : ff[k]*fo1;
     float md = obj.mod_ndx(fo, bw);
-    ndx[k] = md+scal;
+    ndx[k] = md+offset;
   }
  
   float phase = obj.phase;
@@ -264,7 +264,7 @@ void OSC_PARAM(uint16_t index, uint16_t value) {
     obj.form = valf;
     break;
   case k_user_osc_param_shiftshape:
-    obj.scal = valf;
+    obj.offset = valf;
     break;
   default:
     break;
