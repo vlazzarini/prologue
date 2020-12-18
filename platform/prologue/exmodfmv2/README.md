@@ -20,7 +20,7 @@ The following menu parameters are available
 
 - Release time: release time in % (0 - 10s) of internal AR envelope generator.
 
-- ndx amount: modulation index (If release/attack time is 0),
+- ndx amount: modulation index (if release/attack time is 0),
   otherwise modulation index envelope amount.
 
 
